@@ -1,0 +1,14 @@
+
+
+
+
+
+
+pip install playwright-stealth==1.0.6       #для from playwright_stealth import stealth_sync 
+pip install "setuptools<81.0.0"             #для from playwright_stealth import stealth_sync  
+
+pip install camoufox
+python -m camoufox fetch
+
+ollama run qwen2.5-coder:3b
+
