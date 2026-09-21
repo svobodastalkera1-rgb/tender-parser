@@ -1,29 +1,67 @@
-import os
+import json
+import requests
+import re
+from playwright.sync_api import sync_playwright
+from camoufox.sync_api import Camoufox
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from models import SearchResult
 from parsers.base import Distributor
+from read_excel import read_tender_excel
+from dotenv import load_dotenv
+import os
 
 load_dotenv()
+file_path = os.getenv("LOCAL_EXCEL") 
 
 class SearchDNS(SearchResult):
     def __init__(self, article, specs, title_bd, **kwargs):
         super().__init__(**kwargs)
-        self.distributor = distributor
+        self.distributor = Distributor
         self.article = article
         self.specs = specs
         self.title_bd = title_bd
 
 class dns_distributor(Distributor):
-    def __init__(self):
-        super().__init__('DNS')
+    def __init__(self, name='DNS'):
+            super().__init__('DNS')
 
-    def search(self):
-        super().search()    
+    item_name = read_tender_excel(file_path)
 
-#open local file, instead of downloading it from the internet, for testing purposes
-        with open(os.getenv("LOCAL_PATH"), "r", encoding='utf-8') as file:
-            soup = BeautifulSoup(file, "html.parser")
+
+    def _fetch_html(self, item_name):
+        #запускаем браузер для поиска товара и возврата HTML результатов
+        with Camoufox(headless=True) as browser: #False/True - с/без окна
+            page = browser.new_page()
+            try:
+                #формирование URL-поиска по всему сайту
+                base_url = self.search_url
+                params = {
+                    'q': item_name,
+                    'stock': 'now-today-tomorrow-later-out_of_stock',
+                    'order': 'popular'
+                }
+                query_string = '&'.join([f'{k}={v}' for k, v in params.items()])
+                full_url = f"{base_url}?{query_string}"
+
+                #маскировка под пользователя
+                page.goto(full_url, wait_until='domcontentloaded', timeout=60000)
+
+                #ожидание появления главного контейнера с товарами вместо фиксированного таймаута
+                page.wait_for_selector('.product-list, .catalog-products', timeout=30000) #для загрузки динамических элементов
+
+                html = page.content()
+            except Exception as e:
+                print(f"[DNS] Ошбка Camoufox: {e}")
+                html = ""
+            finally:
+                browser.close()
+        return html
+    
+    def search(self, html=None):
+        super().search()
+        self.results = results
+
+        soup = BeautifulSoup(html, "html.parser")
 
         products = soup.find_all('div', class_='catalog-product')[:3]
 
@@ -71,25 +109,4 @@ class dns_distributor(Distributor):
             results.append(result)
 
         return results    
-
-
-
-
-
-
-
-#        def print_items():
-#            print(
-#                f'Наименование: {title} |'
-#                f' Цена: {price} |'
-#                f' Наличие: {availability}'
-#                #f' Характеристики: {specs} |'
-#                #f' Артикул: {article} |'
-#                #f' URL: https://dns-shop.ru{url}'
-#            )
-
-#            if partnumber is not None: print(f' | Партномер: {partnumber} |')
-
-#            return[]
-
-#        print_items()
+    

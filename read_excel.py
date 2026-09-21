@@ -1,10 +1,4 @@
-import sys                              #модуль для работы с аргументами командной строки
 from openpyxl import load_workbook     #функция для чтения Excel файлов
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-file_path = os.getenv("LOCAL_EXCEL") 
 
 def read_tender_excel(file_path):       #при вызове функции передается путь к файлу Excel
                            
@@ -21,5 +15,3 @@ def read_tender_excel(file_path):       #при вызове функции пе
                 'name': name
             })
     return items
-
-#data = read_tender_excel(file_path)     #вызываем функцию и получаем список позиций

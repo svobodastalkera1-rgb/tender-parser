@@ -1,7 +1,6 @@
 import os
 import psycopg
 from dotenv import load_dotenv
-import dns
 
 load_dotenv()
 
@@ -50,7 +49,7 @@ def save_data(results):
                     getattr(result, 'article', None),
                     getattr(result, 'specs', None),
                     getattr(result, 'title_bd', None),
-                    getattr(resilt, 'shop', None)
+                    getattr(result, 'shop', None)
                 )
 
                 cursor.execute(query, values)
@@ -59,7 +58,7 @@ def save_data(results):
 
 def get_item(partnumber, title):
 
-    query = """ SELECT title, price, shop, availability FROM items WHERE partnumber = %s OR title = %s; """ 
+    query = """ SELECT title, price, availability FROM items WHERE partnumber = %s OR title = %s; """ 
 
     with get_connection() as connection:
         with connection.cursor() as cursor:
