@@ -7,11 +7,22 @@ def read_tender_excel(file_path):       #при вызове функции пе
 
     items = []
     for row in sheet.iter_rows(min_row=2, values_only=True): #min_row=2 = начало чтения со второй строки, va;ues_omly=True = получение значения, а не объекта ячеек
-        if row[0] and row[1]:
-            name = str(row[0]).strip()
-
-            #составляем словарь с данными по позиции
+        if row[0] is None and row[1]:
+            name = str(row[1]).strip()
             items.append({
-                'name': name
+                name
+            })            
+
+        if row[0] and row[1] is None:
+            name = str(row[0]).strip()
+            items.append({
+                name
+            })
+
+        if row[0] and row[1]:
+            name = str(row[0]).strip() + ' ' + str(row[1]).strip()
+
+            items.append({
+                name
             })
     return items
