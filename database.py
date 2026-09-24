@@ -1,7 +1,7 @@
 import os
 import psycopg
 from dotenv import load_dotenv
-import dns
+
 
 load_dotenv()
 
@@ -29,7 +29,7 @@ def save_data(results):
                         shop
                     ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         
-                    ON CONFLICT (partnumber, article) DO UPDATE SET 
+                    ON CONFLICT (article) DO UPDATE SET 
                         price = EXCLUDED.price,
                         availability = EXCLUDED.availability,
                         shop = EXCLUDED.shop,
@@ -50,24 +50,18 @@ def save_data(results):
                     getattr(result, 'article', None),
                     getattr(result, 'specs', None),
                     getattr(result, 'title_bd', None),
-                    getattr(resilt, 'shop', None)
+                    getattr(result, 'shop', None)
                 )
 
                 cursor.execute(query, values)
 
             connection.commit()
 
-def get_item(partnumber, title):
+def get_item(partnumber = None, title = None):
 
-    query = """ SELECT title, price, shop, availability FROM items WHERE partnumber = %s OR title = %s; """ 
+    query = """ SELECT title, price, availability FROM items WHERE partnumber = %s OR title = %s; """ 
 
     with get_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, (partnumber, title))
             return cursor.fetchall()
-
-
-
-
-
-
