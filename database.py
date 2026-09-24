@@ -65,5 +65,3 @@ def get_item(partnumber = None, title = None):
         with connection.cursor() as cursor:
             cursor.execute(query, (partnumber, title))
             return cursor.fetchall()
-
-    
