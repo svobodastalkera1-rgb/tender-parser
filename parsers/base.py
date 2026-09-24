@@ -3,4 +3,4 @@ class Distributor:
         self.name = name
 
     def search(self, item_name: str):
-        pass
+        self.item_name = item_name
