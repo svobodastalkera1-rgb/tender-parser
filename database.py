@@ -2,6 +2,7 @@ import os
 import psycopg
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 def get_connection():
@@ -28,7 +29,7 @@ def save_data(results):
                         shop
                     ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         
-                    ON CONFLICT (partnumber, article) DO UPDATE SET 
+                    ON CONFLICT (article) DO UPDATE SET 
                         price = EXCLUDED.price,
                         availability = EXCLUDED.availability,
                         shop = EXCLUDED.shop,
@@ -56,7 +57,7 @@ def save_data(results):
 
             connection.commit()
 
-def get_item(partnumber, title):
+def get_item(partnumber = None, title = None):
 
     query = """ SELECT title, price, availability FROM items WHERE partnumber = %s OR title = %s; """ 
 
@@ -65,8 +66,4 @@ def get_item(partnumber, title):
             cursor.execute(query, (partnumber, title))
             return cursor.fetchall()
 
-
-
-
-
-
+    
