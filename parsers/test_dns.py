@@ -36,18 +36,13 @@ class dns_distributor(Distributor):
                 #маскировка под пользователя
                 page.goto(full_url, wait_until='domcontentloaded', timeout=60000)
 
-                # Ждём именно карточку, которую затем ищет BeautifulSoup.
+                # Ждём именно карточку, которую затем ищет BeautifulSoup. При неудаче выдаем ошибку
                 try:
                     page.wait_for_selector('div.catalog-product', timeout=30000)
                 except Exception as wait_error:
-                    # Вернём фактически полученную страницу: это поможет отличить
-                    # пустой поиск от страницы ошибки/проверки DNS.
-                    print(f"[DNS] Карточки не появились: {wait_error}")
-                    print(f"[DNS] Открыт URL: {page.url}")
-                    print(f"[DNS] Заголовок страницы: {page.title()}")
+                    print(f"Карточки товаров не были найдены: {wait_error}")
 
-                # DNS может добавить цену после появления карточки. Она встречается
-                # либо текстом покупки, либо в атрибуте data-price блока доставки.
+                # Цена встречается или текстом покупки, или в атрибуте data-price блока доставки, пробуем достать
                 try:
                     page.wait_for_function(
                         """() => Array.from(document.querySelectorAll(
@@ -59,7 +54,7 @@ class dns_distributor(Distributor):
                         timeout=15000,
                     )
                 except Exception as wait_error:
-                    print(f"[DNS] Не появился блок с ценой: {wait_error}")
+                    print(f"Блок с ценой не найден: {wait_error}")
 
                 html = page.content()
             except Exception as e:
@@ -92,6 +87,7 @@ class dns_distributor(Distributor):
                 'span', class_='catalog-product__short-specs'
             )
 
+#продолжаем, если товар не найден
             if title_element is None:
                 print(
                     "Карточка пропущена: не найдено название; "
@@ -106,7 +102,7 @@ class dns_distributor(Distributor):
                 price = delivery_price_element.get('data-price')
             else:
                 price = None
-            # В полученном HTML наличие передано атрибутом карточки, а не span.
+
             availability_status = product.get('data-avail-status')
             availability_names = {
                 'now': 'В наличии',
@@ -142,8 +138,6 @@ class dns_distributor(Distributor):
                     f"{', '.join(missing)}"
                 )
 
-            # Пока цена и наличие не распознаны, не сохраняем неполную карточку.
-            # HTML первой такой карточки показывает реальную разметку DNS.
             if (
                 price_element is None and delivery_price_element is None
             ) or (availability_element is None and not availability_status):
@@ -165,7 +159,7 @@ class dns_distributor(Distributor):
             article = product.get('data-code', 'None')
             url = title_element.get('href')
 
-            # В названии DNS иногда добавляет характеристики в квадратных скобках.
+#избавляемся от скобок 
             titles = get_title.split('[', maxsplit=1)
             title = titles[0].strip()
             title_bd = titles[1].replace(']', '').strip() if len(titles) > 1 else ''
