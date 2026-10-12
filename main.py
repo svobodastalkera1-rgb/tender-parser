@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 from dotenv import load_dotenv
 
@@ -7,7 +8,7 @@ from parsers.test_dns import dns_distributor
 from read_excel import read_tender_excel
 
 
-def main():
+async def main():
     load_dotenv()
     file_path = os.getenv("LOCAL_EXCEL")
 
@@ -29,7 +30,7 @@ def main():
             continue
 
         try:
-            html = dns._fetch_html(item)
+            html = dns.asyncio.run(_fetch_html(item))
             if not html:
                 print(f"Сайт не вернул страницу для: '{item}')")
                 continue
@@ -45,4 +46,5 @@ def main():
             print(f"Ошибка при обработке товара '{item}': {error}")
 
 
-main()
+if __name__ == '__main__':
+    asyncio.run(main())
