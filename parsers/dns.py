@@ -1,4 +1,5 @@
-from camoufox.sync_api import Camoufox
+import asyncio
+from camoufox.async_api import AsyncCamoufox
 from bs4 import BeautifulSoup
 from models import SearchResult
 from parsers.base import Distributor
@@ -18,10 +19,10 @@ class dns_distributor(Distributor):
             self.name = name
             self.search_url = search_url
 
-    def _fetch_html(self, item_name):
+    async def _fetch_html(self, item_name):
         #запускаем браузер для поиска товара и возврата HTML результатов
-        with Camoufox(headless=True) as browser: #False/True - с/без окна
-            page = browser.new_page()
+        async with AsyncCamoufox(headless=True) as browser: #False/True - с/без окна
+            page = await browser.new_page()
             try:
                 #формирование URL-поиска по всему сайту
                 base_url = self.search_url
@@ -34,17 +35,17 @@ class dns_distributor(Distributor):
                 full_url = f"{base_url}?{query_string}"
 
                 #маскировка под пользователя
-                page.goto(full_url, wait_until='domcontentloaded', timeout=60000)
+                await page.goto(full_url, wait_until='domcontentloaded', timeout=60000)
 
                 # Ждём именно карточку, которую затем ищет BeautifulSoup. При неудаче выдаем ошибку
                 try:
-                    page.wait_for_selector('div.catalog-product', timeout=30000)
+                    await page.wait_for_selector('div.catalog-product', timeout=30000)
                 except Exception as wait_error:
                     print(f"Карточки товаров не были найдены: {wait_error}")
 
                 # Цена встречается или текстом покупки, или в атрибуте data-price блока доставки, пробуем достать
                 try:
-                    page.wait_for_function(
+                    await page.wait_for_function(
                         """() => Array.from(document.querySelectorAll(
                             '.catalog-product__buy, .delivery-info-widget[data-price]'
                         )).some(element =>
@@ -56,7 +57,7 @@ class dns_distributor(Distributor):
                 except Exception as wait_error:
                     print(f"Блок с ценой не найден: {wait_error}")
 
-                html = page.content()
+                html = await page.content()
             except Exception as e:
                 print(f"[DNS] Ошбка Camoufox: {e}")
                 html = ""
